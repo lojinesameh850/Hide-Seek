@@ -20,11 +20,10 @@ def get_simulation():
         # Validate inputs
         if human_role not in ["hider", "seeker"]:
             return jsonify({"error": "Invalid role. Must be 'hider' or 'seeker'"}), 400
-        
+
         # Determine computer's role (opposite of human's role)
         computer_role = "seeker" if human_role == "hider" else "hider"
         computer_probabilities = compute_optimal_strategy(payoff_matrix, computer_role)
-
         hider_optimal_strategy = compute_optimal_strategy(payoff_matrix, "hider")
         seeker_optimal_strategy = compute_optimal_strategy(payoff_matrix, "seeker")
         player_choices = []
@@ -50,7 +49,6 @@ def get_simulation():
                 payoff *= 0.5
             elif proximity == 2:
                 payoff *= 0.75
-
             if payoff > 0 :
                 winner = "hider" 
             elif payoff <0 : 
@@ -71,20 +69,20 @@ def get_simulation():
             else:
                 fianl_winner = "draw"
         result = {
-            "final_winner" : final_winner,
-            "computer_choices" : computer_choices,
-            "player_choices" : player_choices,
-            "winners" : winners,
-            "hiders_payoffs" : hider_payoffs,
-            "seekers_payoffs" : seeker_payoffs,
-            "final_hider_payoff" : float(final_hider_payoff),
-            "final_seeker_payoff" : float(final_seeker_payoff),
-            "seeker_optimal_strategy" : [float(x) for x in seeker_optimal_strategy],
-            "hider_optimal_strategy" : [float(x) for x in hider_optimal_strategy],
-            "computer_role" : computer_role,
-            "human_role" : human_role,
-            "proximities" : proximities
-        }
+        "final_winner": final_winner,
+        "computer_choices": [int(x) for x in computer_choices],
+        "player_choices": [int(x) for x in player_choices],
+        "winners": winners,  # strings, safe to keep
+        "hiders_payoffs": [float(x) for x in hider_payoffs],
+        "seekers_payoffs": [float(x) for x in seeker_payoffs],
+        "final_hider_payoff": float(final_hider_payoff),
+        "final_seeker_payoff": float(final_seeker_payoff),
+        "seeker_optimal_strategy": [float(x) for x in seeker_optimal_strategy],
+        "hider_optimal_strategy": [float(x) for x in hider_optimal_strategy],
+        "computer_role": computer_role,
+        "human_role": human_role,
+        "proximities": [int(x) for x in proximities]
+    }
         return jsonify(result)
     except Exception as e :
         return jsonify({"error" : str(e)})
