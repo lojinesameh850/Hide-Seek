@@ -41,12 +41,17 @@ def get_strategy():
         # Compute optimal strategies for both roles (for informational purposes)
         hider_optimal_strategy = compute_optimal_strategy(payoff_matrix, "hider")
         seeker_optimal_strategy = compute_optimal_strategy(payoff_matrix, "seeker")
-        
         # Determine game outcome and payoff
         if human_role == "hider":
             payoff = payoff_matrix[human_choice, computer_choice]
         else:  # human is seeker
             payoff = payoff_matrix[computer_choice, human_choice]
+        proximity = int(np.abs(human_choice - computer_choice)) 
+        if proximity == 1:
+            payoff *= 0.5
+        elif proximity == 2:
+            payoff *= 0.75
+
         if payoff > 0 :
             winner = "hider" 
         elif payoff <0 : 
@@ -63,6 +68,7 @@ def get_strategy():
             "hider_payoff": float(hider_payoff),
             "seeker_payoff" : float(seeker_payoff),
             "winner" : winner,
+            "proximity" : proximity,
             "hider_optimal_strategy": [float(x) for x in hider_optimal_strategy],
             "seeker_optimal_strategy": [float(x) for x in seeker_optimal_strategy],
             "game_value": float(hider_optimal_strategy @ payoff_matrix @ seeker_optimal_strategy)
