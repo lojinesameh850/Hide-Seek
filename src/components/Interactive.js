@@ -9,7 +9,7 @@ import Typography from "@mui/joy/Typography";
 function InteractiveForm() {
   const [numHideouts, setNumHideouts] = useState(2);
   const [userRole, setUserRole] = useState("hider");
-  const [worldType, setWorldType] = useState("");
+  const [worldType, setWorldType] = useState("Linear (1D)");
   const [result, setResult] = useState(null);
   const [hideouts, setHideouts] = useState([]);
   const [playerChoice, setPlayerChoice] = useState(-1);
