@@ -2,13 +2,14 @@ from aiohttp import Payload
 from flask import Flask, request, jsonify
 import numpy as np
 from functions import *
+from flask_cors import CORS
 app = Flask(__name__)
-
+CORS(app)
 # Paste the previously given LP solving functions and play_round here
 # (Assuming they are defined as solve_lp_for_hider, solve_lp_for_seeker, play_round)
 @app.route('/play/simulation' , methods = ["POST"])
 def get_simulation():
-    data = request.json()
+    data = request.get_json()
 
     if not data:
         return jsonify({"error": "No data provided"}), 400
@@ -33,16 +34,18 @@ def get_simulation():
         winners = []
         final_hider_payoff = 0
         final_seeker_payoff = 0
+        proximities = []
         for num_of_rounds in range(100):
-            computer_choice = make_computer_choice(computer_probabilities)
+            computer_choice = int(make_computer_choice(computer_probabilities))
             computer_choices.append(computer_choice)
-            human_choice = make_random_choice(computer_probabilities)
+            human_choice = int(make_random_choice(computer_probabilities))
             player_choices.append(human_choice)
             if human_role == "hider":
                 payoff = payoff_matrix[human_choice, computer_choice]
             else:  # human is seeker
                 payoff = payoff_matrix[computer_choice, human_choice]
-            proximity = int(np.abs(human_choice - computer_choice)) 
+            proximity = int(abs(human_choice - computer_choice))  # Use native int
+            proximities.append(proximity)
             if proximity == 1:
                 payoff *= 0.5
             elif proximity == 2:
@@ -54,24 +57,37 @@ def get_simulation():
                 winner = "seeker"
             else:
                 winner = "draw"
-            hider_payoff = payoff
+            hider_payoff = float(payoff)
             seeker_payoff = -payoff if payoff != 0.0 else 0.0
             winners.append(winner)
             hider_payoffs.append(hider_payoff)
             seeker_payoffs.append(seeker_payoff)
             final_hider_payoff += hider_payoff
             final_seeker_payoff += seeker_payoff
+            if final_seeker_payoff > final_hider_payoff:
+                final_winner = "seeker"
+            elif final_seeker_payoff < final_hider_payoff:
+                final_winner = "hider"
+            else:
+                fianl_winner = "draw"
         result = {
+            "final_winner" : final_winner,
             "computer_choices" : computer_choices,
             "player_choices" : player_choices,
             "winners" : winners,
             "hiders_payoffs" : hider_payoffs,
             "seekers_payoffs" : seeker_payoffs,
-            "final_hider_payoff" : final_hider_payoff,
-            "final_seeker_payoff" : final_seeker_payoff,
+            "final_hider_payoff" : float(final_hider_payoff),
+            "final_seeker_payoff" : float(final_seeker_payoff),
+            "seeker_optimal_strategy" : [float(x) for x in seeker_optimal_strategy],
+            "hider_optimal_strategy" : [float(x) for x in hider_optimal_strategy],
+            "computer_role" : computer_role,
+            "human_role" : human_role,
+            "proximities" : proximities
         }
-    except:
-        pass
+        return jsonify(result)
+    except Exception as e :
+        return jsonify({"error" : str(e)})
         
 @app.route('/play', methods=['POST'])
 def get_strategy():
