@@ -108,3 +108,6 @@ def make_computer_choice(probabilities):
     """
     choices = list(range(len(probabilities)))
     return np.random.choice(choices, p=probabilities)
+def make_random_choice(probabilities):
+    choices = list(range(len(probabilities)))
+    return np.random.choice(choices)
