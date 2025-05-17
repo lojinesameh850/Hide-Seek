@@ -1,8 +1,8 @@
-import React from 'react';
-import Box from '@mui/joy/Box'; 
-import Typography from '@mui/joy/Typography'; 
-import { BlockMath } from 'react-katex'; 
-import 'katex/dist/katex.min.css';
+import React from "react";
+import Box from "@mui/joy/Box";
+import Typography from "@mui/joy/Typography";
+import { BlockMath } from "react-katex";
+import "katex/dist/katex.min.css";
 
 /**
  * Converts a payoff matrix to LaTeX format
@@ -11,19 +11,19 @@ import 'katex/dist/katex.min.css';
  * @returns {string} - LaTeX representation of the matrix
  */
 function matrixToLatex(PayOffMatrix, hideouts) {
-  if (!PayOffMatrix || PayOffMatrix.length === 0) return '';
-  
+  if (!PayOffMatrix || PayOffMatrix.length === 0) return "";
+
   let latexString = `\\begin{pmatrix}\n`;
-  
+
   for (let i = 0; i < PayOffMatrix.length; i++) {
-    latexString += PayOffMatrix[i].join(' & ') + ' \\\\';
+    latexString += PayOffMatrix[i].join(" & ") + " \\\\";
     if (i < PayOffMatrix.length - 1) {
-      latexString += '\n';
+      latexString += "\n";
     }
   }
-  
-  latexString += '\\end{pmatrix}';
-  
+
+  latexString += "\\end{pmatrix}";
+
   return latexString;
 }
 
@@ -38,21 +38,34 @@ export default function PayOffMatrixDisplay({ PayOffMatrix, hideouts = [] }) {
   const latex = matrixToLatex(PayOffMatrix, hideouts);
 
   return (
-    <Box sx={{ mt: 4, color: 'white' }}>
-      <Typography level="h4" sx={{ mb: 1 }}>
+    <Box sx={{ mt: 4, color: "white" }}>
+      <Typography
+        level="h4"
+        sx={{
+          mb: 1,
+          fontFamily: "Special Gothic Expanded One",
+          color: "#ffffff",
+        }}
+      >
         Payoff Matrix
       </Typography>
 
-      {(!PayOffMatrix || PayOffMatrix.length === 0) ? (
-        <Typography color="warning">No payoff matrix available to display</Typography>
+      {!PayOffMatrix || PayOffMatrix.length === 0 ? (
+        <Typography color="warning">
+          No payoff matrix available to display
+        </Typography>
       ) : (
         <BlockMath math={latex} />
       )}
 
       {/* Optional debug text */}
-      <Box sx={{ mt: 2, display: 'none' }}>
-        <Typography level="body2" component="pre" sx={{ fontFamily: 'monospace' }}>
-          {PayOffMatrix.map(row => row.join(' | ')).join('\n')}
+      <Box sx={{ mt: 2, display: "none" }}>
+        <Typography
+          level="body2"
+          component="pre"
+          sx={{ fontFamily: "monospace" }}
+        >
+          {PayOffMatrix.map((row) => row.join(" | ")).join("\n")}
         </Typography>
       </Box>
     </Box>

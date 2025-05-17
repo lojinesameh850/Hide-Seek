@@ -1,6 +1,7 @@
 import Box from '@mui/joy/Box';
 import Grid from '@mui/joy/Grid';
 import Typography from '@mui/joy/Typography';
+import { useEffect } from 'react';
 
 /**
  * Generates hideouts with random types
@@ -18,8 +19,11 @@ function generateHideouts(count) {
 
 }
 
-export default function generateHideoutGrid({ hideouts }) {
-
+export default function GenerateHideoutGrid({ hideouts , setPlayerChoice}) {
+    useEffect(() => {
+      console.log("here " +setPlayerChoice)
+    }, [])
+    
     return (
         <Box sx={{ flexGrow: 1, backgroundColor: "#2A313A" }}>
             <Grid
