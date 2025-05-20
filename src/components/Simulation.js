@@ -140,8 +140,12 @@ function SimulationForm() {
           human_role: userRole,
         };
         console.log("Sending to backend:", data);
+        
+        const endpoint = worldType === "grid" 
+        ? "http://localhost:5000/play2d/simulation2d" 
+        : "http://localhost:5000/play/simulation";
 
-        const response = await fetch("http://localhost:5000/play/simulation", {
+        const response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
