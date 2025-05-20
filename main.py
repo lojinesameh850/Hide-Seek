@@ -1,6 +1,7 @@
 from aiohttp import Payload
 from flask import Flask, request, jsonify
 import numpy as np
+import math
 from functions import *
 from flask_cors import CORS
 app = Flask(__name__)
@@ -67,7 +68,7 @@ def get_simulation():
             elif final_seeker_payoff < final_hider_payoff:
                 final_winner = "hider"
             else:
-                fianl_winner = "draw"
+                final_winner = "draw"
         result = {
         "final_winner": final_winner,
         "computer_choices": [int(x) for x in computer_choices],
@@ -127,6 +128,171 @@ def get_strategy():
         else:  # human is seeker
             payoff = payoff_matrix[computer_choice, human_choice]
         proximity = int(np.abs(human_choice - computer_choice)) 
+        if proximity == 1:
+            payoff *= 0.5
+        elif proximity == 2:
+            payoff *= 0.75
+
+        if payoff > 0 :
+            winner = "hider" 
+        elif payoff <0 : 
+            winner = "seeker"
+        else:
+            winner = "draw"
+        hider_payoff = payoff
+        seeker_payoff = -payoff if payoff != 0.0 else 0.0
+        # Prepare the response
+        response = {
+            "computer_choice": int(computer_choice + 1),  # Convert back to 1-based index and to standard Python int
+            "computer_role" : computer_role,
+            "human_role" : human_role,
+            "hider_payoff": float(hider_payoff),
+            "seeker_payoff" : float(seeker_payoff),
+            "winner" : winner,
+            "proximity" : proximity,
+            "hider_optimal_strategy": [float(x) for x in hider_optimal_strategy],
+            "seeker_optimal_strategy": [float(x) for x in seeker_optimal_strategy],
+            "game_value": float(hider_optimal_strategy @ payoff_matrix @ seeker_optimal_strategy)
+        }
+        
+        return jsonify(response)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    
+@app.route('/play2d/simulation2d' , methods = ["POST"])
+def get_simulationTwoD():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    try:
+        payoff_matrix = np.array(data.get('payoff'))
+        human_role = data.get('human_role')  # "hider" or "seeker"        
+        # Validate inputs
+        if human_role not in ["hider", "seeker"]:
+            return jsonify({"error": "Invalid role. Must be 'hider' or 'seeker'"}), 400
+
+        # Determine computer's role (opposite of human's role)
+        computer_role = "seeker" if human_role == "hider" else "hider"
+        computer_probabilities = compute_optimal_strategy(payoff_matrix, computer_role)
+        hider_optimal_strategy = compute_optimal_strategy(payoff_matrix, "hider")
+        seeker_optimal_strategy = compute_optimal_strategy(payoff_matrix, "seeker")
+        player_choices = []
+        computer_choices = []
+        hider_payoffs = []
+        seeker_payoffs = []
+        winners = []
+        final_hider_payoff = 0
+        final_seeker_payoff = 0
+        proximities = []
+        for num_of_rounds in range(100):
+            computer_choice = int(make_computer_choice(computer_probabilities))
+            computer_choices.append(computer_choice)
+            human_choice = int(make_random_choice(computer_probabilities))
+            player_choices.append(human_choice)
+            if human_role == "hider":
+                payoff = payoff_matrix[human_choice, computer_choice]
+            else:  # human is seeker
+                payoff = payoff_matrix[computer_choice, human_choice]
+                
+            m = int(math.sqrt(len(payoff_matrix)))
+            human_choice_x = math.floor(human_choice / m)
+            human_choice_y = human_choice % m
+            computer_choice_x = math.floor(computer_choice / m)
+            computer_choice_y = computer_choice % m
+            proximity = int(abs(human_choice_x - computer_choice_x) + abs(human_choice_y - computer_choice_y))
+            proximities.append(proximity)
+
+            if proximity == 1:
+                payoff *= 0.5
+            elif proximity == 2:
+                payoff *= 0.75
+            if payoff > 0 :
+                winner = "hider" 
+            elif payoff <0 : 
+                winner = "seeker"
+            else:
+                winner = "draw"
+            hider_payoff = float(payoff)
+            seeker_payoff = -payoff if payoff != 0.0 else 0.0
+            winners.append(winner)
+            hider_payoffs.append(hider_payoff)
+            seeker_payoffs.append(seeker_payoff)
+            final_hider_payoff += hider_payoff
+            final_seeker_payoff += seeker_payoff
+            if final_seeker_payoff > final_hider_payoff:
+                final_winner = "seeker"
+            elif final_seeker_payoff < final_hider_payoff:
+                final_winner = "hider"
+            else:
+                final_winner = "draw"
+        result = {
+        "final_winner": final_winner,
+        "computer_choices": [int(x) for x in computer_choices],
+        "player_choices": [int(x) for x in player_choices],
+        "winners": winners,  # strings, safe to keep
+        "hiders_payoffs": [float(x) for x in hider_payoffs],
+        "seekers_payoffs": [float(x) for x in seeker_payoffs],
+        "final_hider_payoff": float(final_hider_payoff),
+        "final_seeker_payoff": float(final_seeker_payoff),
+        "seeker_optimal_strategy": [float(x) for x in seeker_optimal_strategy],
+        "hider_optimal_strategy": [float(x) for x in hider_optimal_strategy],
+        "computer_role": computer_role,
+        "human_role": human_role,
+        "proximities": [int(x) for x in proximities]
+    }
+        return jsonify(result)
+    except Exception as e :
+        return jsonify({"error" : str(e)})
+        
+@app.route('/play2d', methods=['POST'])
+def get_strategyTwoD():
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    # Extract the required inputs
+    try:
+        payoff_matrix = np.array(data.get('payoff'))
+        human_role = data.get('human_role')  # "hider" or "seeker"
+        human_choice = data.get('human_choice')  # 1-based index
+        
+        # Convert human_choice to 0-based index
+        human_choice = int(human_choice) - 1
+        
+        # Validate inputs
+        if human_role not in ["hider", "seeker"]:
+            return jsonify({"error": "Invalid role. Must be 'hider' or 'seeker'"}), 400
+        
+        if not (0 <= human_choice < len(payoff_matrix)):
+            return jsonify({"error": "Invalid choice index"}), 400
+        
+        # Determine computer's role (opposite of human's role)
+        computer_role = "seeker" if human_role == "hider" else "hider"
+        
+        # Compute optimal mixed strategy for the computer based on its role
+        computer_probabilities = compute_optimal_strategy(payoff_matrix, computer_role)
+        # Make a choice for the computer based on the calculated probabilities
+        computer_choice = make_computer_choice(computer_probabilities)
+        
+        # Compute optimal strategies for both roles (for informational purposes)
+        hider_optimal_strategy = compute_optimal_strategy(payoff_matrix, "hider")
+        seeker_optimal_strategy = compute_optimal_strategy(payoff_matrix, "seeker")
+        # Determine game outcome and payoff
+        if human_role == "hider":
+            payoff = payoff_matrix[human_choice, computer_choice]
+        else:  # human is seeker
+            payoff = payoff_matrix[computer_choice, human_choice]
+
+        m = int(math.sqrt(len(payoff_matrix)))
+        human_choice_x = math.floor(human_choice / m)
+        human_choice_y = human_choice % m
+        computer_choice_x = math.floor(computer_choice / m)
+        computer_choice_y = computer_choice % m
+        proximity = int(abs(human_choice_x - computer_choice_x) + abs(human_choice_y - computer_choice_y))
         if proximity == 1:
             payoff *= 0.5
         elif proximity == 2:
