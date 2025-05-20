@@ -71,8 +71,8 @@ def get_simulation():
                 final_winner = "draw"
         result = {
         "final_winner": final_winner,
-        "computer_choices": [int(x) for x in computer_choices],
-        "player_choices": [int(x) for x in player_choices],
+        "computer_choices": [int(x + 1) for x in computer_choices],   # Convert back to 1-based index and to standard Python int
+        "player_choices": [int(x + 1) for x in player_choices],       # Convert back to 1-based index and to standard Python int
         "winners": winners,  # strings, safe to keep
         "hiders_payoffs": [float(x) for x in hider_payoffs],
         "seekers_payoffs": [float(x) for x in seeker_payoffs],
@@ -230,8 +230,8 @@ def get_simulationTwoD():
                 final_winner = "draw"
         result = {
         "final_winner": final_winner,
-        "computer_choices": [int(x) for x in computer_choices],
-        "player_choices": [int(x) for x in player_choices],
+        "computer_choices": [int(x + 1) for x in computer_choices],   # Convert back to 1-based index and to standard Python int
+        "player_choices": [int(x + 1) for x in player_choices],       # Convert back to 1-based index and to standard Python int
         "winners": winners,  # strings, safe to keep
         "hiders_payoffs": [float(x) for x in hider_payoffs],
         "seekers_payoffs": [float(x) for x in seeker_payoffs],
