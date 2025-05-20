@@ -8,6 +8,7 @@ import Grid from "@mui/joy/Grid";
 import Typography from "@mui/joy/Typography";
 function InteractiveForm() {
   const [numHideouts, setNumHideouts] = useState(2);
+  const [count, setCount] = useState(0);
   const [userRole, setUserRole] = useState("hider");
   const [worldType, setWorldType] = useState("Linear (1D)");
   const [result, setResult] = useState(null);
@@ -84,6 +85,15 @@ function InteractiveForm() {
     }
   }
 
+  function adjustWorldSize(hideouts) {
+    if(worldType === "grid") {
+      setCount(hideouts * hideouts);
+    }
+    else{
+      setCount(hideouts);
+    }
+  }
+
   function generatePayoffMatrix(hideouts) {
     console.log(hideouts);
     // Ensure hideouts is a valid array
@@ -152,7 +162,8 @@ function InteractiveForm() {
     setHideouts(newHides);
   }
   const handleGenerateGrid = () => {
-    generateHideouts(numHideouts);
+    adjustWorldSize(numHideouts);
+    generateHideouts(count);
     setResult(null)
     setSeekerScore(0)
     setHiderScore(0)
@@ -394,33 +405,133 @@ function InteractiveForm() {
           </>
         )} */}
         {generateGrid && (
-  <div
-    style={{
-      marginTop: "15px",
-      marginBottom: "15px",
-      display: "flex",
-      flexWrap: "wrap",
-      justifyContent: "center",
-    }}
-  >
-    <Box sx={{ flexGrow: 1, backgroundColor: "#2A313A" }}>
-      <Grid
-        container
-        sx={{
-          "--Grid-borderWidth": "6px",
-          borderTop: "var(--Grid-borderWidth) solid",
-          borderLeft: "var(--Grid-borderWidth) solid",
-          borderColor: "#3A404C",
-          borderRadius: 12,
-          overflow: "hidden",
-          "& > div": {
-            borderRight: "var(--Grid-borderWidth) solid",
-            borderBottom: "var(--Grid-borderWidth) solid",
-            borderColor: "#3A404C",
-          },
-        }}
-      >
-        {hideouts.map((location) => {
+          <div
+            style={{
+              marginTop: "15px",
+              marginBottom: "15px",
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+    
+        {worldType === "grid" ? (
+          <Box sx={{ flexGrow: 1, backgroundColor: "#2A313A" }}>
+          
+            {Array.from({ length: Math.sqrt(hideouts.length) }).map((_, row) => (
+              <Box key={`row-${row}`} sx={{
+                display: 'flex',
+                // margin: '10px',
+                // gap: '10px',
+                backgroundColor: "#2A313A",
+              }}>
+                {Array.from({ length: Math.sqrt(hideouts.length) }).map((_, col) => {
+                  const index = row * Math.sqrt(hideouts.length) + col;
+                  const location = hideouts[index];
+                  const isPlayerBlock = playerChoice === location.index;
+                  const isComputerBlock = result && result.computer_choice === location.index;
+                  const playerIsHider = userRole === "hider";
+                  const playerIsSeeker = userRole === "seeker";
+        
+                  let backgroundColor = "transparent";
+                  let boxShadow = "none";
+        
+                  if (result) {
+                    const playerCaught = playerIsHider && result.winner === "seeker";
+                    const playerFound = playerIsSeeker && result.winner === "seeker";
+                    const playerEscaped = playerIsHider && result.winner === "hider";
+                    const playerMissed = playerIsSeeker && result.winner === "hider";
+        
+                    if (playerCaught && isPlayerBlock) {
+                      boxShadow = "0 0 12px 4px red inset";
+                      backgroundColor = "#5a0000";
+                    } else if (playerFound && isPlayerBlock) {
+                      boxShadow = "0 0 12px 4px limegreen inset";
+                      backgroundColor = "#004d00";
+                    } else if (playerEscaped) {
+                      if (isPlayerBlock) {
+                        boxShadow = "0 0 12px 4px limegreen inset";
+                        backgroundColor = "#004d00";
+                      } else if (isComputerBlock) {
+                        boxShadow = "0 0 8px 2px white inset";
+                        backgroundColor = "#ffffff33";
+                      }
+                    } else if (playerMissed) {
+                      if (isPlayerBlock) {
+                        boxShadow = "0 0 12px 4px red inset";
+                        backgroundColor = "#5a0000";
+                      } else if (isComputerBlock) {
+                        boxShadow = "0 0 8px 2px white inset";
+                        backgroundColor = "#ffffff33";
+                      }
+                    }
+                  }
+        
+                  if (!result && isPlayerBlock) {
+                    boxShadow = "0 0 0 4px #EC407A inset";
+                    backgroundColor = "#394150";
+                  }
+        
+                  return (
+                    <Box
+                      key={`${row}-${col}`}
+                      onClick={() => setPlayerChoice(location.index)}
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        minHeight: 140,
+                        minWidth: 140,
+                        fontFamily: "Special Gothic Expanded One",
+                        color: "#ffffff",
+                        backgroundColor,
+                        boxShadow,
+                        transition: "all 0.3s ease",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          color: "#ffffff",
+                          fontFamily: "Special Gothic Expanded One",
+                        }}
+                      >
+                        {`Location ${location.index}`}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          color: "#ffffff",
+                          fontFamily: "Special Gothic Expanded One",
+                        }}
+                      >
+                        {location.type}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Box sx={{ flexGrow: 1, backgroundColor: "#2A313A" }}>
+          <Grid
+            container
+            sx={{
+              "--Grid-borderWidth": "6px",
+              borderTop: "var(--Grid-borderWidth) solid",
+              borderLeft: "var(--Grid-borderWidth) solid",
+              borderColor: "#3A404C",
+              borderRadius: 12,
+              overflow: "hidden",
+              "& > div": {
+                borderRight: "var(--Grid-borderWidth) solid",
+                borderBottom: "var(--Grid-borderWidth) solid",
+                borderColor: "#3A404C",
+              },
+            }}
+          >
+          {hideouts.map((location) => {
           const isPlayerBlock = playerChoice === location.index;
           const isComputerBlock = result && result.computer_choice === location.index;
 
@@ -506,7 +617,7 @@ function InteractiveForm() {
           );
         })}
       </Grid>
-    </Box>
+    </Box>)}
   </div>
 )}
 

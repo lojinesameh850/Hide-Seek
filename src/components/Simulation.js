@@ -10,6 +10,7 @@ import SimulationResults from "./SimulationResults";
 
 function SimulationForm() {
   const [numHideouts, setNumHideouts] = useState(2);
+  const [count, setCount] = useState(0);
   const [userRole, setUserRole] = useState("hider");
   const [worldType, setWorldType] = useState("Linear (1D)");
   const [result, setResult] = useState(null);
@@ -47,6 +48,16 @@ function SimulationForm() {
     setResult(0);
     setWinner(0);
   }, [hideouts]);
+
+  function adjustWorldSize(hideouts) {
+    if(worldType === "grid") {
+      setCount(hideouts * hideouts);
+    }
+    else{
+      setCount(hideouts);
+    }
+  }
+
   function generatePayoffMatrix(hideouts) {
     console.log(hideouts);
     // Ensure hideouts is a valid array
@@ -104,7 +115,8 @@ function SimulationForm() {
     setpayoffMatrix(payoffMatrix);
   }
   const handleGenerateGrid = () => {
-    generateHideouts(numHideouts);
+    adjustWorldSize(numHideouts);
+    generateHideouts(count);
     setResult(null);
     setWinner(null);
     setSeekerScore(0);
@@ -365,6 +377,56 @@ function SimulationForm() {
               justifyContent: "center",
             }}
           >
+            {worldType === "grid" ? (
+              <Box sx={{ flexGrow: 1, backgroundColor: "#2A313A" }}>
+              
+              {Array.from({ length: Math.sqrt(hideouts.length) }).map((_, row) => (
+                <Box key={`row-${row}`} sx={{
+                  display: 'flex',
+                  // margin: '10px',
+                  // gap: '10px',
+                  backgroundColor: "#2A313A",
+                }}>
+                  {Array.from({ length: Math.sqrt(hideouts.length) }).map((_, col) => {
+                    const location = hideouts[row * Math.sqrt(hideouts.length) + col];
+                    return (
+                      <Box
+                        key={`${row}-${col}`}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          minHeight: 140,
+                          minWidth: 140,
+                          fontFamily: "Special Gothic Expanded One",
+                          color: "#ffffff",
+                          backgroundColor: "transparent",
+                        }}
+                      >
+                      <Typography
+                        sx={{
+                          color: "#ffffff",
+                          fontFamily: "Special Gothic Expanded One",
+                        }}
+                      >
+                        {`Location ${location.index}`}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          color: "#ffffff",
+                          fontFamily: "Special Gothic Expanded One",
+                        }}
+                      >
+                        {location.type}
+                      </Typography>
+                    </Box>
+                    );
+                  })}
+                </Box>
+              ))}
+            </Box>
+          ) : (
             <Box sx={{ flexGrow: 1, backgroundColor: "#2A313A" }}>
               <Grid
                 container
@@ -416,7 +478,7 @@ function SimulationForm() {
                   </Grid>
                 ))}
               </Grid>
-            </Box>
+            </Box>)}
           </div>
         )}
         {payoffMatrixDisplay && (
